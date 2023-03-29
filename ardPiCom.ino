@@ -1,6 +1,3 @@
-#include <Wire.h>
-#include <TimeLib.h> // https://www.pjrc.com/teensy/td_libs_Time.html
-#include <DS1307RTC.h> // https://www.pjrc.com/teensy/td_libs_DS1307RTC.html
 #define GET_VAR_NAME(var) (#var)
 #define SERIAL_TX_BUFFER_SIZE 64
 
