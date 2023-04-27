@@ -1,8 +1,20 @@
+#To Do:
+#Create User mpgwetter
+
+#Redis DBs overview:
+#0  Live dump
+#1  Minute Average
+#2  Hourly Average
+#3  Daily Average
+
 import json
 import serial
 import time
-
+import redis
+import math
 baud = 57600
+minute = 0
+
 
 def checksum(data):
     s = 0
@@ -26,11 +38,17 @@ def returnToArduino(data):
         #0 = Acknowledge
         ser.write(str(0).encode() + 0x0A.to_bytes(1, 'little'))
 
+def addToDB(data):
+    redis.set(data.time, data, ex=90)
+            
+
 #Converts JSON String to data Structure
 class Payload(object):
         def __init__(self, j):
             self.__dict__ = json.loads(j)
 
+pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+redis = redis.Redis(connection_pool=pool)
 
 while True:
     try:
@@ -49,6 +67,7 @@ while True:
         #JSON processed to object
         data = Payload(j) 
         returnToArduino(data)
+        addToDB(data)
     except:
         try:
             #Not Acknowledge

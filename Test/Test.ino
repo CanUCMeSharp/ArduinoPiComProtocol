@@ -1,10 +1,8 @@
 #define GET_VAR_NAME(var) (#var)
 #define SERIAL_TX_BUFFER_SIZE 64
 
-const int baud = 19200;
-unsigned long timeArd = 0;
-long time = 0;
-
+const int baud = 38400;
+long time_test = 0;
 
 struct DataMessage {
   int temp, light, loudness, wind, wDirection, uv, o2, humidity, pressure, co2, co, no2, smog, ph1, ph2, ph3;
@@ -16,14 +14,14 @@ String intToJson(String name, int i){
     name = name.substring(index, length);
     return "\"" + name + "\":" + "\"" + i + "\"";
   }
-  String longToJson(String name, long i){ 
+  String longToJson(String name, time_t i){ 
     int index = name.lastIndexOf('.') + 1;
     int length = name.length();
     name = name.substring(index, length);
     return "\"" + name + "\":" + "\"" + i + "\"";
   }
   String stringToJson(String name, String i){ 
-    int index = name.lastIndexOf('.') + 1;
+    int index = name.lastIndexOf('.') +  1;
     int length = name.length();
     name = name.substring(index, length);
     return "\"" + name + "\":" + "\"" + i + "\"";
@@ -31,32 +29,34 @@ String intToJson(String name, int i){
 
 DataMessage d;
     void send(){//DataMessage d){
+      String output = "";
       long checksum = 0;
       int *values[] = { &d.temp, &d.light, &d.loudness, &d.wind, &d.wDirection, &d.uv, &d.o2, &d.humidity, &d.pressure, &d.co2, &d.co, &d.no2, &d.smog, &d.ph1, &d.ph2, &d.ph3};
       String names[] = {GET_VAR_NAME(d.temp), GET_VAR_NAME(d.light), GET_VAR_NAME(d.loudness),GET_VAR_NAME(d.wind), GET_VAR_NAME(d.wDirection), GET_VAR_NAME(d.uv), GET_VAR_NAME(d.o2), GET_VAR_NAME(d.humidity), GET_VAR_NAME(d.pressure), GET_VAR_NAME(d.co2), GET_VAR_NAME(d.co), GET_VAR_NAME(d.no2), GET_VAR_NAME(d.smog), GET_VAR_NAME(d.ph1),GET_VAR_NAME(d.ph2),GET_VAR_NAME(d.ph3)};
-      Serial.print("{");
-      Serial.print(intToJson("type", 0) + ", ");
+      output = "{";
+      output += intToJson("type", 0) + ", ";
       for(int i = 0; i < sizeof(values) / sizeof(values[0]); i++){
-        Serial.print(intToJson(names[i], *values[i]) + ", ");
+        output += intToJson(names[i], *values[i]) + ", ";
         checksum = (checksum + *values[i]); //% MOD_Check;
       }
-      Serial.print(longToJson("time",timeArd));
-      Serial.print(",");
-      Serial.print(longToJson("checksum", checksum));
-      Serial.println("}");
+      output += longToJson("time",time_test);
+      output += ",";
+      output += longToJson("checksum", checksum);
+      output += "}\n";
+      Serial.print(output);
       getReturn();
     }
     void error(String text){
       Serial.print("{");
       Serial.print(intToJson("Type", 1) + ", ");
       Serial.print(stringToJson("message", text) + ", ");
-      Serial.print(longToJson("time", timeArd) + "}\n");
+      Serial.print(longToJson("time", time_test) + "}\n");
       //getReturn();
     }
     void getReturn(){
             String incomingString = Serial.readStringUntil(0x0A);
             long number = (atol(incomingString.c_str()));
-            timeArd = number;
+            time_test = number;
             if(number == 0){
               return;
             }
@@ -66,6 +66,7 @@ DataMessage d;
             
             // Serial.println(incomingString);
     }
+    
 void setup() {
   Serial.begin(57600);
   d.temp = 5000;
@@ -90,3 +91,4 @@ void loop() {
     send();
     delay(1000);
 }
+
